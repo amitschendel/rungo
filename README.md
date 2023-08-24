@@ -51,6 +51,24 @@ Then, you can populate the rootfs directory with the following command:
 ```bash
 docker export $(docker create busybox) | tar -C rootfs -xvf -
 ```
+## Demo
+```
+amit@amit-vm:~/rungo$ ./rungo -run -uid -uts -pid -mnt=/tmp/rootfs -net -ipc -command=/bin/sh -hostname=rungo
+INFO[0000] Initiating container process!                
+INFO[0000] Setting PID namespace                        
+INFO[0000] Setting IPC namespace                        
+INFO[0000] Setting NET namespace                        
+INFO[0000] Setting USER namespace                       
+INFO[0000] Setting MOUNT namespace
+INFO[0000] Setting UTS namespace
+🧙 [root@rungo] ~/ ‣ ps
+PID   USER     TIME  COMMAND
+    1 root      0:00 /proc/self/exe -ns -uid -uts -pid -mnt=/tmp/rootfs -net -ipc -command=/bin/sh -hostname=rungo
+    6 root      0:00 /bin/sh
+   10 root      0:00 ps
+🧙 [root@rungo] ~/ ‣ 
+```
 ## References
 - [Namespaces in operation, part 1: namespaces overview](https://lwn.net/Articles/531114/)
 - [containers-from-scratch-with-golang](https://medium.com/@ssttehrani/containers-from-scratch-with-golang-5276576f9909)
+- [Gontainer](https://github.com/alegrey91/Gontainer)

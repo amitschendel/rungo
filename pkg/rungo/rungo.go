@@ -78,11 +78,12 @@ func (r *Rungo) setMntNs() (bool, error) {
 func (r *Rungo) setPidNs() (bool, error) {
 	if r.Config.NamespacesConfig.Mnt != "" {
 		if r.Config.NamespacesConfig.Pid {
+			log.Info("Setting PID namespace\n")
 			if err := syscall.Mount("proc", "proc", "proc", 0, ""); err != nil {
 				log.Error("Error setting PID namespace")
 				return false, errors.New("error setting PID namespace")
 			}
-			log.Info("PID namespace set\n")
+
 			return true, nil
 		}
 	}
