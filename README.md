@@ -1,6 +1,6 @@
 # rungo
 
-rungo is a simple, lightweight CLI tool for creating and running containers - container runtime.
+rungo is a simple, lightweight CLI tool for creating and running containers - AKA a container runtime.
 This project was created for experimenting with containers internals and better grasp the concepts of containerization.
 
 ## Features
@@ -10,7 +10,7 @@ This project was created for experimenting with containers internals and better 
 - [x] Network namespace
 - [x] PID namespace
 - [x] User namespace
-- [] Cgroups
+- [ ] Cgroups
 
 ## Installation
 ```bash
@@ -54,7 +54,3 @@ docker export $(docker create busybox) | tar -C rootfs -xvf -
 ## References
 - [Namespaces in operation, part 1: namespaces overview](https://lwn.net/Articles/531114/)
 - [containers-from-scratch-with-golang](https://medium.com/@ssttehrani/containers-from-scratch-with-golang-5276576f9909)
-
-
-
-
