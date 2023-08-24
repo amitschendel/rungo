@@ -16,7 +16,7 @@ type Rungo struct {
 func (r *Rungo) Run() {
 	r.setNamespaces()
 	cmd := exec.Command(r.Config.ProcessPath, r.Config.Args...)
-	cmd.Env = []string{"PS1=📦 [$(whoami)@$(hostname)] ~$(pwd) ‣ "}
+	cmd.Env = []string{"PS1=🧙 [$(whoami)@$(hostname)] ~$(pwd) ‣ "}
 
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
