@@ -2,12 +2,8 @@ package rungo
 
 import (
 	"errors"
-	//"fmt"
 	"os"
 	"os/exec"
-
-	//"path/filepath"
-	//"strconv"
 	"syscall"
 
 	log "github.com/sirupsen/logrus"
@@ -18,8 +14,6 @@ type Rungo struct {
 }
 
 func (r *Rungo) Run() {
-	log.Printf("Here")
-
 	r.setNamespaces()
 	cmd := exec.Command(r.Config.ProcessPath, r.Config.Args...)
 	cmd.Env = []string{"PS1=📦 [$(whoami)@$(hostname)] ~$(pwd) ‣ "}
@@ -129,10 +123,8 @@ func (r *Rungo) setUtsNs() (bool, error) {
 	if r.Config.NamespacesConfig.Uts {
 		if r.Config.Hostname != "" {
 			containerHostname = r.Config.Hostname
-			log.Printf("using this hostname: %v", containerHostname)
 		} else {
-			containerHostname = "rungo"
-			log.Printf("using this hostname: %v", containerHostname)
+			containerHostname = DEFAULT_HOSTNAME
 		}
 		if err := syscall.Sethostname([]byte(containerHostname)); err != nil {
 			log.Printf("err: %v", err)
