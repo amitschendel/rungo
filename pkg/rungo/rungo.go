@@ -2,25 +2,23 @@ package rungo
 
 import (
 	"errors"
-	"fmt"
+	//"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"strconv"
+
+	//"path/filepath"
+	//"strconv"
 	"syscall"
 
 	log "github.com/sirupsen/logrus"
 )
 
 type Rungo struct {
-	Init   bool
 	Config *RungoConfig
 }
 
 func (r *Rungo) Run() {
-	if !r.Init {
-		r.init()
-	}
+	log.Printf("Here")
 
 	r.setNamespaces()
 	cmd := exec.Command(r.Config.ProcessPath, r.Config.Args...)
@@ -35,16 +33,31 @@ func (r *Rungo) Run() {
 	defer must(r.unsetProcessID())
 }
 
-func (r *Rungo) init() {
+func (r *Rungo) Init() {
 	log.Info("Initiating container process!")
-	r.Init = true
-	cmd := exec.Command(CMD_PATH, append([]string{"ns", r.Config.ProcessPath}, r.Config.Args...)...)
+	cmd := exec.Command(CMD_PATH, append([]string{"-ns"}, os.Args[2:]...)...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
+	flags := r.Config.NamespacesConfig.Get()
+
 	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Cloneflags: uintptr(r.Config.NamespacesConfig.Get()),
+		Cloneflags: uintptr(flags),
+		UidMappings: []syscall.SysProcIDMap{
+			{
+				ContainerID: 0,
+				HostID:      os.Getuid(),
+				Size:        1,
+			},
+		},
+		GidMappings: []syscall.SysProcIDMap{
+			{
+				ContainerID: 0,
+				HostID:      os.Getgid(),
+				Size:        1,
+			},
+		},
 	}
 
 	cmd.Run()
@@ -62,7 +75,6 @@ func (r *Rungo) setMntNs() (bool, error) {
 				return false, errors.New("error changing dir")
 			}
 		} else {
-			log.Error("Error setting MNT namespace")
 			return false, errors.New("error setting MNT namespace")
 		}
 	}
@@ -81,7 +93,6 @@ func (r *Rungo) setPidNs() (bool, error) {
 		}
 	}
 
-	log.Error("Error setting PID namespace, mount namespace not set")
 	return false, nil
 }
 
@@ -102,7 +113,6 @@ func (r *Rungo) setIpcNs() (bool, error) {
 		log.Info("Setting IPC namespace")
 		return true, nil
 	}
-	log.Error("Error setting IPC namespace")
 	return false, nil
 }
 
@@ -111,7 +121,6 @@ func (r *Rungo) setNetNs() (bool, error) {
 		log.Info("Setting NET namespace")
 		return true, nil
 	}
-	log.Error("Error setting NET namespace")
 	return false, nil
 }
 
@@ -120,11 +129,13 @@ func (r *Rungo) setUtsNs() (bool, error) {
 	if r.Config.NamespacesConfig.Uts {
 		if r.Config.Hostname != "" {
 			containerHostname = r.Config.Hostname
+			log.Printf("using this hostname: %v", containerHostname)
 		} else {
 			containerHostname = "rungo"
+			log.Printf("using this hostname: %v", containerHostname)
 		}
 		if err := syscall.Sethostname([]byte(containerHostname)); err != nil {
-			log.Error("Error setting UTS namespace")
+			log.Printf("err: %v", err)
 			return false, errors.New("error setting UTS namespace")
 		}
 	}
@@ -136,28 +147,27 @@ func (r *Rungo) setUserNs() (bool, error) {
 		log.Info("Setting USER namespace")
 		return true, nil
 	}
-	log.Error("Error setting USER namespace")
 	return false, nil
 }
 
-func (r *Rungo) setCgroupNs() (bool, error) {
-	if r.Config.NamespacesConfig.Cgroup {
-		log.Info("Setting CGROUP namespace")
-		cgroups := "/sys/fs/cgroup/"
-		pids := filepath.Join(cgroups, "pids")
-		os.Mkdir(filepath.Join(pids, r.Config.Hostname), 0755)
-		os.WriteFile(filepath.Join(pids, fmt.Sprintf("%s/pids.max", r.Config.Hostname)), []byte("10"), 0700)
-		//up here we limit the number of child processes to 10
+// func (r *Rungo) setCgroupNs() (bool, error) {
+// 	if r.Config.NamespacesConfig.Cgroup {
+// 		log.Info("Setting CGROUP namespace")
+// 		cgroups := "/sys/fs/cgroup/"
+// 		pids := filepath.Join(cgroups, "pids")
+// 		os.Mkdir(filepath.Join(pids, r.Config.Hostname), 0755)
+// 		os.WriteFile(filepath.Join(pids, fmt.Sprintf("%s/pids.max", r.Config.Hostname)), []byte("10"), 0700)
+// 		//up here we limit the number of child processes to 10
 
-		os.WriteFile(filepath.Join(pids, fmt.Sprintf("%s/notify_on_release", r.Config.Hostname)), []byte("1"), 0700)
+// 		os.WriteFile(filepath.Join(pids, fmt.Sprintf("%s/notify_on_release", r.Config.Hostname)), []byte("1"), 0700)
 
-		os.WriteFile(filepath.Join(pids, fmt.Sprintf("%s/cgroup.procs", r.Config.Hostname)), []byte(strconv.Itoa(os.Getpid())), 0700)
-		// up here we write container PIDs to cgroup.procs
-		return true, nil
-	}
-	log.Error("Error setting CGROUP namespace")
-	return false, nil
-}
+// 		os.WriteFile(filepath.Join(pids, fmt.Sprintf("%s/cgroup.procs", r.Config.Hostname)), []byte(strconv.Itoa(os.Getpid())), 0700)
+// 		// up here we write container PIDs to cgroup.procs
+// 		return true, nil
+// 	}
+// 	log.Error("Error setting CGROUP namespace")
+// 	return false, nil
+// }
 
 func (r *Rungo) setNamespaces() {
 	must(r.setMntNs())
@@ -166,7 +176,7 @@ func (r *Rungo) setNamespaces() {
 	must(r.setNetNs())
 	must(r.setUtsNs())
 	must(r.setUserNs())
-	must(r.setCgroupNs())
+	//must(r.setCgroupNs())
 }
 
 func must(result bool, err error) {

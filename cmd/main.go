@@ -18,7 +18,9 @@ type options struct {
 }
 
 func main() {
-	config := new(rungo.RungoConfig)
+	config := rungo.RungoConfig{
+		ProcessPath: "/bin/sh",
+	}
 	options := new(options)
 
 	flag.Usage = func() {
@@ -32,18 +34,16 @@ func main() {
 	flag.BoolVar(&config.NamespacesConfig.Net, "net", false, "")
 	flag.BoolVar(&config.NamespacesConfig.Pid, "pid", false, "")
 	flag.BoolVar(&config.NamespacesConfig.User, "uid", false, "")
-	flag.BoolVar(&config.NamespacesConfig.Cgroup, "cgroup", false, "")
 	flag.BoolVar(&options.run, "run", false, "")
 	flag.BoolVar(&options.ns, "ns", false, "")
 	flag.Parse()
 
-	rungo := rungo.Rungo{Init: false, Config: config}
+	rungo := rungo.Rungo{Config: &config}
 
 	switch os.Args[1] {
 	case "-run":
-		rungo.Run()
+		rungo.Init()
 	case "-ns":
-		rungo.Init = true
 		rungo.Run()
 	default:
 		help()
@@ -53,7 +53,7 @@ func main() {
 }
 
 func help() {
-	fmt.Println("Usage: ./Gontainer -run -uid [-mnt=/path/rootfs] [-uts [-hostname=new_hostname]] [-ipc] [-net] [-pid]")
+	fmt.Println("Usage: ./Rungo -run -uid [-mnt=/path/rootfs] [-uts [-hostname=new_hostname]] [-ipc] [-net] [-pid]")
 	fmt.Println("  -mnt='/path/rootfs'        Enable Mount namespace")
 	fmt.Println("  -uts                       Enable UTS namespace")
 	fmt.Println("  -hostname='new_hostname'   Set a custom hostname into the container")
@@ -61,5 +61,4 @@ func help() {
 	fmt.Println("  -net                       Enable Network namespace")
 	fmt.Println("  -pid                       Enable PID namespace")
 	fmt.Println("  -uid                       Enable User namespace")
-	fmt.Println("  -cgroup                    Enable Cgroup namespace")
 }

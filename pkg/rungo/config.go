@@ -6,13 +6,12 @@ import (
 )
 
 type NamespacesConfig struct {
-	Pid    bool
-	Mnt    string
-	Net    bool
-	Ipc    bool
-	Uts    bool
-	User   bool
-	Cgroup bool
+	Pid  bool
+	Mnt  string
+	Net  bool
+	Ipc  bool
+	Uts  bool
+	User bool
 }
 
 func (n *NamespacesConfig) Get() int {
@@ -35,9 +34,6 @@ func (n *NamespacesConfig) Get() int {
 	}
 	if n.User {
 		flags |= syscall.CLONE_NEWUSER
-	}
-	if n.Cgroup {
-		flags |= syscall.CLONE_NEWCGROUP
 	}
 
 	return flags
