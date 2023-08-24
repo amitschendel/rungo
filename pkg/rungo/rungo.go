@@ -142,25 +142,6 @@ func (r *Rungo) setUserNs() (bool, error) {
 	return false, nil
 }
 
-// func (r *Rungo) setCgroupNs() (bool, error) {
-// 	if r.Config.NamespacesConfig.Cgroup {
-// 		log.Info("Setting CGROUP namespace")
-// 		cgroups := "/sys/fs/cgroup/"
-// 		pids := filepath.Join(cgroups, "pids")
-// 		os.Mkdir(filepath.Join(pids, r.Config.Hostname), 0755)
-// 		os.WriteFile(filepath.Join(pids, fmt.Sprintf("%s/pids.max", r.Config.Hostname)), []byte("10"), 0700)
-// 		//up here we limit the number of child processes to 10
-
-// 		os.WriteFile(filepath.Join(pids, fmt.Sprintf("%s/notify_on_release", r.Config.Hostname)), []byte("1"), 0700)
-
-// 		os.WriteFile(filepath.Join(pids, fmt.Sprintf("%s/cgroup.procs", r.Config.Hostname)), []byte(strconv.Itoa(os.Getpid())), 0700)
-// 		// up here we write container PIDs to cgroup.procs
-// 		return true, nil
-// 	}
-// 	log.Error("Error setting CGROUP namespace")
-// 	return false, nil
-// }
-
 func (r *Rungo) setNamespaces() {
 	must(r.setMntNs())
 	must(r.setPidNs())
@@ -168,7 +149,6 @@ func (r *Rungo) setNamespaces() {
 	must(r.setNetNs())
 	must(r.setUtsNs())
 	must(r.setUserNs())
-	//must(r.setCgroupNs())
 }
 
 func must(result bool, err error) {
